@@ -1,0 +1,207 @@
+import numpy as np
+import ast
+import subprocess
+import json
+from collections import defaultdict
+from datetime import datetime
+try:
+    import ssdeep
+    has_ssdeep = True
+except ImportError:
+    has_ssdeep = False
+    print("Warning: ssdeep library not found. Bytecode similarity will be basic.")
+
+class AdvancedBlockchainAuditor:
+    """
+    A Comprehensive Blockchain Auditor with a paramount focus on contract
+    owners and the detection of sophisticated threats, including phishing,
+    frivolous transactions, massive fund burning, and bytecode similarity,
+    leveraging Logipractictional Integral Aspects (LIA) and behavioral analysis,
+    with trace route transaction sniffing.
+    """
+
+    PHI = (1 + np.sqrt(5)) / 2
+
+    SECURITY_VULNERABILITIES = {
+        "reentrancy": "Potential reentrancy vulnerability detected.",
+        "integer_overflow": "Potential integer overflow/underflow.",
+        "gas_limit": "Potential issues with gas limits.",
+        "timestamp_dependence": "Reliance on block.timestamp can be risky.",
+        "tx_origin": "Use of tx.origin can lead to phishing.",
+        "delegatecall_risk": "Unsafe use of delegatecall.",
+        "unchecked_return_values": "Unchecked return values from external calls.",
+        "denial_of_service": "Potential denial of service vulnerability.",
+        "access_control": "Issues with access control mechanisms.",
+        "owner_privilege_abuse": "Potential abuse of owner privileges.",
+        "unauthorized_owner_access": "Risk of unauthorized access to owner functions.",
+        "vulnerabilities_in_owner_functions": "Vulnerabilities in owner-controlled functions.",
+        "uncontrolled_burn_functions": "Uncontrolled/exploitable burning of funds.",
+        # ... (expand as needed) ...
+    }
+
+    IOF_PRINCIPLES_FOR_SECURITY = {
+        "Minimize Complexity": "Avoid overly complex code.",
+        "Explicit State Management": "Ensure clear state transitions.",
+        "Secure Math Operations": "Use safe math libraries.",
+        "Proper Access Control": "Implement robust access control.",
+        "Careful External Calls": "Sanitize inputs and handle failures.",
+        "Gas Efficiency": "Optimize for minimal gas consumption.",
+        "Event Emission": "Emit relevant events for off-chain monitoring.",
+        "Error Handling": "Implement proper error handling.",
+        "Immutability Considerations": "Understand and manage immutability.",
+        "Upgradability Management": "Secure upgrade mechanisms if applicable.",
+        "Principle of Least Privilege": "Grant minimum necessary privileges.",
+        "Secure Owner Management": "Robust owner key/multi-sig management.",
+        "Transparent Owner Actions": "Auditable owner actions via events.",
+        "Careful Tokenomics Management": "Transparent/controlled token burning.",
+        # ... (expand as needed) ...
+    }
+
+    LIA_FLAG_WEIGHTS = {
+        "temporal_anomaly_frequency": 3,
+        "value_inconsistency_pattern": 4,
+        "graph_proximity_to_known_phishers": 5,
+        "massive_burn_event": 5,
+        "owner_transfer_suspicion": 5,
+        "transfer_to_newly_created_contract": 4,
+        "multiple_low_value_transfers": 2,
+        "unusual_owner_activity_pattern": 5,
+        "owner_executing_high_risk_functions": 4,
+        "bytecode_similarity_to_malicious": 6,
+        # ... (expand as needed) ...
+    }
+
+    MALICIOUS_JUDGMENT_THRESHOLDS = {
+        "high_lia_score": 15,
+        "high_burn_risk_score": 12,
+        "high_phishing_score": 10,
+        "high_owner_risk_score": 13,
+        "strong_bytecode_similarity": 0.8,
+        # ... (expand as needed) ...
+    }
+
+    def __init__(self, contract_code=None, audit_agency_api_url=None, api_credentials=None, blockchain_data_source=None, threat_intel_source=None, ml_model=None, contract_owner_address=None, massive_burn_threshold=10**18, trace_route_depth=5):
+        """Initializes the AdvancedBlockchainAuditor with comprehensive features."""
+        self.contract_code = contract_code
+        self.audit_agency_api_url = audit_agency_api_url
+        self.api_credentials = api_credentials
+        self.blockchain_data_source = blockchain_data_source
+        self.threat_intel_source = threat_intel_source
+        self.ml_model = ml_model
+        self.contract_owner_address = contract_owner_address
+        self.massive_burn_threshold = massive_burn_threshold
+        self.trace_route_depth = trace_route_depth
+        self.audit_report = {"vulnerabilities": [], "suspicious_actions": [], "lia_flags": [], "malicious_judgment": None, "risk_score": 0.0, "anomalies": [], "owner_risk_factors": [], "burn_risk_factors": [], "trace_route": {}}
+        self.suspicious_action_counts = defaultdict(int)
+        self.lia_flag_scores = defaultdict(float)
+        self.user_behavior_baselines = {}
+        self.owner_behavior_baseline = {}
+        self.transaction_history_context = {}
+
+    def load_contract(self, code, owner_address=None):
+        """Loads contract code and optionally owner address, resetting state."""
+        self.contract_code = code
+        self.contract_owner_address = owner_address
+        self.massive_burn_threshold = 10**18
+        self.audit_report = {"vulnerabilities": [], "suspicious_actions": [], "lia_flags": [], "malicious_judgment": None, "risk_score": 0.0, "anomalies": [], "owner_risk_factors": [], "burn_risk_factors": [], "trace_route": {}}
+        self.suspicious_action_counts.clear()
+        self.lia_flag_scores.clear()
+        self.user_behavior_baselines.clear()
+        self.owner_behavior_baseline.clear()
+        self.transaction_history_context.clear()
+
+    def analyze_vulnerabilities(self):
+        """Performs advanced static analysis, focusing on key areas."""
+        if not self.contract_code:
+            self.audit_report["vulnerabilities"].append({"severity": "High", "description": "No contract code loaded."})
+            return
+
+        try:
+            tree = ast.parse(self.contract_code) # Placeholder for Solidity/Vyper parser integration
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == 'delegatecall':
+                    self.audit_report["vulnerabilities"].append({"severity": "High", "description": "Potential unsafe delegatecall.", "location": f"Line {node.lineno}"})
+                elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == 'call' and not any(isinstance(parent, (ast.If, ast.Assert)) for parent in ast.walk(tree) if getattr(parent, 'test', None) == node):
+                    self.audit_report["vulnerabilities"].append({"severity": "Medium", "description": "Unchecked external call.", "location": f"Line {node.lineno}"})
+                elif isinstance(node, ast.FunctionDef):
+                    for decorator in getattr(node, 'decorator_list', []):
+                        if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Name) and decorator.func.id.lower() in ['onlyowner', 'isowner', 'adminonly']:
+                            self.audit_report["vulnerabilities"].append({"severity": "Medium", "description": f"Review owner-restricted function '{node.name}'.", "location": f"Line {node.lineno}"})
+                        elif isinstance(decorator, ast.Name) and decorator.id.lower() in ['onlyowner', 'isowner', 'adminonly']:
+                            self.audit_report["vulnerabilities"].append({"severity": "Medium", "description": f"Review owner-restricted function '{node.name}' (decorator).", "location": f"Line {node.lineno}"})
+                elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr.lower() in ['burn', 'destroy', 'selfdestruct']:
+                    self.audit_report["vulnerabilities"].append({"severity": "Medium", "description": f"Review burn function '{node.func.attr}'.", "location": f"Line {node.lineno}"})
+        except SyntaxError:
+            self.audit_report["vulnerabilities"].append({"severity": "Low", "description": "Syntax error - manual review needed."})
+        except Exception as e:
+            self.audit_report["vulnerabilities"].append({"severity": "Low", "description": f"Error during AST analysis: {e}"})
+
+        try:
+            result_slither = subprocess.run(['slither', self.contract_code], capture_output=True, text=True, check=False)
+            if result_slither.returncode != 0 or "vulnerability" in result_slither.stdout.lower():
+                self.audit_report["vulnerabilities"].extend([{"severity": "High", "description": f"Slither: {line.strip()}", "location": "External Scanner"} for line in result_slither.stdout.splitlines() if "vulnerability" in line.lower()])
+        except FileNotFoundError:
+            self.audit_report["vulnerabilities"].append({"severity": "Low", "description": "External scanner 'slither' not found."})
+        except Exception as e:
+            self.audit_report["vulnerabilities"].append({"severity": "Low", "description": f"Error running external scanner (slither): {e}"})
+
+        if self.threat_intel_source and self.contract_code:
+            bytecode = "0x" + self.contract_code.encode('utf-8').hex() # Placeholder
+            similarity = self._check_bytecode_similarity(bytecode, self.threat_intel_source.get("malicious_bytecode_patterns", {}))
+            if similarity > self.MALICIOUS_JUDGMENT_THRESHOLDS.get("strong_bytecode_similarity", 0.8):
+                self.lia_flag_scores["bytecode_similarity_to_malicious"] += self.LIA_FLAG_WEIGHTS.get("bytecode_similarity_to_malicious", 0)
+                self.audit_report["lia_flags"].append({"type": "bytecode_similarity_to_malicious", "similarity_score": similarity, "matched_pattern": "unknown"})
+
+    def monitor_blockchain_actions(self, contract_address, recent_transactions, all_transactions=None, user_transaction_history=None, known_phishers=None, contract_creation_timestamps=None, current_block=None, owner_transaction_history=None):
+        """Monitors blockchain actions, integrating LIA, behavioral analysis, and trace route triggering."""
+        if not self.blockchain_data_source:
+            self.audit_report["suspicious_actions"].append({"type": "missing_data_source", "description": "Blockchain data source not configured."})
+            return
+
+        for tx in recent_transactions:
+            tx_hash = tx.get("hash")
+            self.transaction_history_context[tx_hash] = tx
+            sender = tx.get("from")
+            receiver = tx.get("to")
+            value = tx.get("value", 0)
+            timestamp = tx.get("timestamp")
+            input_data = tx.get("input")
+
+            # --- LIA Flagging ---
+            if timestamp and sender:
+                recent_sender_txs = [t for t in recent_transactions if t.get("from") == sender and timestamp and t.get("timestamp") and (timestamp - t.get("timestamp")).total_seconds() < 60]
+                if len(recent_sender_txs) > 5:
+                    self.lia_flag_scores["temporal_anomaly_frequency"] += self.LIA_FLAG_WEIGHTS.get("temporal_anomaly_frequency", 0)
+                    self.audit_report["lia_flags"].append({"type": "temporal_anomaly_frequency", "tx_hash": tx_hash, "sender": sender, "recent_tx_count": len(recent_sender_txs)})
+
+            if receiver and contract_creation_timestamps and receiver in contract_creation_timestamps and timestamp and (timestamp - contract_creation_timestamps[receiver]).total_seconds() < 3600 and value > 0:
+                self.lia_flag_scores["transfer_to_newly_created_contract"] += self.LIA_FLAG_WEIGHTS.get("transfer_to_newly_created_contract", 0)
+                self.audit_report["lia_flags"].append({"type": "transfer_to_newly_created_contract", "tx_hash": tx_hash, "receiver": receiver, "creation_age": (timestamp - contract_creation_timestamps[receiver]).total_seconds()})
+
+            if tx.get("to") == "0x0000000000000000000000000000000000000000" and value > self.massive_burn_threshold:
+                self.lia_flag_scores["massive_burn_event"] += self.LIA_FLAG_WEIGHTS.get("massive_burn_event", 0)
+                self.audit_report["lia_flags"].append({"type": "massive_burn_event", "tx_hash": tx_hash, "burner": sender, "amount": value})
+
+            if sender and known_phishers and sender in known_phishers.get("neighbors", {}):
+                self.lia_flag_scores["graph_proximity_to_known_phishers"] += self.LIA_FLAG_WEIGHTS.get("graph_proximity_to_known_phishers", 0)
+                self.audit_report["lia_flags"].append({"type": "graph_proximity_to_known_phishers", "tx_hash": tx_hash, "sender": sender, "neighbor": known_phishers["neighbors"][sender]})
+
+            if sender == self.contract_owner_address:
+                if owner_transaction_history and self.contract_owner_address in owner_transaction_history and len(owner_transaction_history[self.contract_owner_address]) > 5:
+                    recent_owner_actions = owner_transaction_history[self.contract_owner_address][-5:]
+                    avg_gas = np.mean([t.get("gasUsed", 0) for t in recent_owner_actions]) if recent_owner_actions else 0
+                    if tx.get("gasUsed", 0) > avg_gas * 5:
+                        self.lia_flag_scores["unusual_owner_activity_pattern"] += self.LIA_FLAG_WEIGHTS.get("unusual_owner_activity_pattern", 0)
+                        self.audit_report["lia_flags"].append({"type": "unusual_owner_activity_pattern", "tx_hash": tx_hash, "owner": self.contract_owner_address, "gas_used": tx.get("gasUsed"), "avg_recent_gas": avg_gas})
+                if receiver == contract_address and input_data and input_data[:10].lower() == "0xf2fde38b": # transferOwnership
+                    self.lia_flag_scores["owner_transfer_suspicion"] += self.LIA_FLAG_WEIGHTS.get("owner_transfer_suspicion", 0)
+                    self.audit_report["lia_flags"].append({"type": "owner_transfer_suspicion", "tx_hash": tx_hash, "owner": self.contract_owner_address, "potential_new_owner": "unknown (check logs)"})
+                critical_function_selectors = ["0xa9059cbb", "0x23b872dd", "0x42966c68"]
+                if receiver == contract_address and input_data and input_data[:8].lower() in critical_function_selectors:
+                    self.lia_flag_scores["owner_executing_high_risk_functions"] += self.LIA_FLAG_WEIGHTS.get("owner_executing_high_risk_functions", 0)
+                    self.audit_report["lia_flags"].append({"type": "owner_executing_high_risk_functions", "tx_hash": tx_hash, "owner": self.contract_owner_address, "function_called": input_data[:8].lower()})
+
+            # --- Trigger Trace Route ---
+            if all_transactions is not None:
+                for flag in self.audit_report["lia_flags"]:
+                    if flag.get("tx_hash") == tx_hash and flag["type"] in ["massive_burn_event", "owner_transfer_susp
